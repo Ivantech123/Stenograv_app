@@ -245,6 +245,9 @@ function onJobEvent(id, ev) {
       break;
   }
   if (id === app.view) renderNow();
+  // Подпись этапа и кольцо прогресса в очереди — не чаще раза в процент.
+  const step = Math.floor(j.pct * 100);
+  if (ev.kind === "stage" || step !== j.queueStep) { j.queueStep = step; renderQueue(); }
 }
 
 function onJobFinished({ id, outcome }) {

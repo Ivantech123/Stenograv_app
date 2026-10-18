@@ -1,0 +1,24 @@
+[env]
+# bindgen для whisper.cpp: libclang.dll из pip-пакета `libclang` (scripts/setup-dev.ps1).
+LIBCLANG_PATH = { value = "tools/libclang/clang/native", relative = true }
+
+# Крейт cmake подменяет флаги MSVC и теряет /O2 — whisper.cpp выходит в десятки раз медленнее.
+CMAKE_C_FLAGS_RELEASE = "/O2 /Ob2 /DNDEBUG"
+CMAKE_CXX_FLAGS_RELEASE = "/O2 /Ob2 /DNDEBUG"
+CMAKE_C_FLAGS_RELWITHDEBINFO = "/O2 /Ob2 /DNDEBUG"
+CMAKE_CXX_FLAGS_RELWITHDEBINFO = "/O2 /Ob2 /DNDEBUG"
+
+# Переносимый набор инструкций вместо -march=native: AVX2/FMA/F16C есть у всех x86
+# начиная с 2013 года (Haswell, Zen). Сборка, сделанная на этом ПК, пойдёт и на другом.
+GGML_NATIVE = "OFF"
+GGML_AVX = "ON"
+GGML_AVX2 = "ON"
+GGML_FMA = "ON"
+GGML_F16C = "ON"
+
+# cmake-rs заменяет флаги по умолчанию и теряет /EHsc (исключения C++ в gguf.cpp).
+CMAKE_C_FLAGS = "-nologo -MD"
+CMAKE_CXX_FLAGS = "-nologo -MD /EHsc"
+
+# Vulkan SDK для сборки с видеокартой (--features gpu): установлен в tools/vulkan в режиме copy_only.
+VULKAN_SDK = { value = "tools/vulkan", relative = true }

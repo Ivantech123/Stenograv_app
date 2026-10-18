@@ -1,0 +1,33 @@
+[package]
+name = "stenograf-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Локальная расшифровка диктофонных записей: декодирование, whisper.cpp, текст"
+
+[features]
+default = []
+# Radeon/GeForce через Vulkan. Для сборки нужен Vulkan SDK (переменная VULKAN_SDK).
+gpu = ["whisper-rs/vulkan"]
+
+[dependencies]
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+whisper-rs = "0.16"
+symphonia = { version = "0.5", features = ["all-codecs", "all-formats"] }
+rubato = "0.16"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "blocking", "http2"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
+docx-rs = "0.4"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+num_cpus = "1"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55"
+windows-sys = { version = "0.59", features = [
+  "Win32_Foundation",
+  "Win32_Storage_FileSystem",
+  "Win32_System_Power",
+  "Win32_System_SystemInformation",
+] }

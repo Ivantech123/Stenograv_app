@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Стенограф</title>
+  <link rel="stylesheet" href="fonts/fonts.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="home" data-state="idle">
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="titlebar" data-tauri-drag-region>
+    <div class="brand" data-tauri-drag-region>
+      <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="2" y="9" width="2" height="6" rx="1" />
+        <rect x="6" y="5" width="2" height="14" rx="1" />
+        <rect x="10" y="8" width="2" height="8" rx="1" />
+        <rect x="14" y="11" width="8" height="2" rx="1" />
+        <rect x="14" y="15" width="6" height="2" rx="1" opacity=".55" />
+        <rect x="14" y="7" width="5" height="2" rx="1" opacity=".55" />
+      </svg>
+      <span data-tauri-drag-region>Стенограф</span>
+    </div>
+    <nav class="tabs" id="tabs">
+      <span class="tab-ink" id="tab-ink"></span>
+      <button class="tab on" data-page="home">Расшифровка</button>
+      <button class="tab" data-page="archive">Архив</button>
+      <button class="tab" data-page="models">Модели</button>
+      <button class="tab" data-page="settings">Параметры</button>
+    </nav>
+    <div class="win">
+      <button class="win-btn" id="win-min" title="Свернуть"><svg viewBox="0 0 10 10"><path d="M1 5h8" /></svg></button>
+      <button class="win-btn" id="win-max" title="Развернуть"><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" rx="1" /></svg></button>
+      <button class="win-btn close" id="win-close" title="Закрыть"><svg viewBox="0 0 10 10"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" /></svg></button>
+    </div>
+  </header>
+
+  <!-- ─────────── Расшифровка ─────────── -->
+  <main class="page" id="page-home">
+    <section class="stage">
+      <div class="now" id="now">
+        <div class="now-left">
+          <div class="now-stage" id="now-stage">Читаю запись</div>
+          <h2 class="now-name" id="now-name">запись.wma</h2>
+          <div class="now-meta" id="now-meta"></div>
+        </div>
+        <div class="now-pct" id="now-pct"><span id="now-pct-num">0</span><small>%</small></div>
+      </div>
+
+      <canvas id="wave" aria-hidden="true"></canvas>
+      <div class="wave-clock" id="wave-clock"><span id="clock-left">00:00</span><span id="clock-right">00:00</span></div>
+
+      <div class="hero" id="hero">
+        <h1>Перетащите запись</h1>
+        <p>Или выберите файл. Текст появится рядом с ним.<br /><span class="formats">WMA · MP3 · M4A · WAV · OGG · FLAC · AMR · видео</span></p>
+        <div class="hero-actions">
+          <button class="btn primary" id="pick-files">Выбрать запись</button>
+          <button class="btn ghost" id="pick-folder">Папку целиком</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="reader" id="reader">
+      <div class="reader-scroll" id="reader-scroll">
+        <div class="transcript" id="transcript"></div>
+        <div class="typing" id="typing"><i></i><i></i><i></i></div>
+      </div>
+      <button class="to-live" id="to-live">К последней фразе ↓</button>
+    </section>
+
+    <aside class="queue" id="queue">
+      <div class="queue-head"><span>Очередь</span><span id="queue-count"></span></div>
+      <ol class="queue-list" id="queue-list"></ol>
+    </aside>
+
+    <footer class="dock">
+      <div class="dock-idle">
+        <div class="preset" id="preset" role="radiogroup">
+          <span class="preset-ink" id="preset-ink"></span>
+          <button data-preset="fast" role="radio">Быстро</button>
+          <button data-preset="balanced" role="radio">Баланс</button>
+          <button data-preset="accurate" role="radio">Точно</button>
+        </div>
+        <div class="preset-hint" id="preset-hint"></div>
+        <div class="dock-spacer"></div>
+        <label class="chip toggle" title="Подсказать модели «истец», «ходатайство», «ГПК РФ»… В текст сами не вставляются">
+          <input type="checkbox" id="opt-legal" /><span>Юр. термины</span>
+        </label>
+        <button class="chip" id="vocab-btn" title="Имена, номера дел, редкие слова">Словарь<b id="vocab-count"></b></button>
+        <div class="formats-pick" id="formats">
+          <label class="chip toggle"><input type="checkbox" data-format="txt" /><span>TXT</span></label>
+          <label class="chip toggle"><input type="checkbox" data-format="docx" /><span>DOCX</span></label>
+          <label class="chip toggle"><input type="checkbox" data-format="srt" /><span>SRT</span></label>
+        </div>
+      </div>
+
+      <div class="dock-run">
+        <div class="run-note" id="run-note">Звук не покидает компьютер</div>
+        <div class="dock-spacer"></div>
+        <button class="btn ghost" id="add-more">Добавить ещё</button>
+        <button class="btn danger" id="stop">Остановить</button>
+      </div>
+
+      <div class="dock-done">
+        <div class="done-stats" id="done-stats"></div>
+        <div class="dock-spacer"></div>
+        <button class="btn ghost icon" id="copy-text" title="Копировать текст"><svg viewBox="0 0 16 16"><rect x="5" y="5" width="8.5" height="8.5" rx="1.6" /><path d="M10.5 3.2V3a1.5 1.5 0 0 0-1.5-1.5H3.5A1.5 1.5 0 0 0 2 3v5.5A1.5 1.5 0 0 0 3.5 10h.3" /></svg></button>
+        <button class="btn ghost" id="reveal">Показать в папке</button>
+        <div class="open-group" id="open-group"></div>
+        <button class="btn ghost" id="new-job">Новая запись</button>
+      </div>
+    </footer>
+
+    <div class="popover" id="vocab-pop">
+      <div class="pop-title">Словарь для этой работы</div>
+      <p class="pop-hint">Имена, названия, номера дел — через запятую. Модель охотнее напишет их именно так.</p>
+      <textarea id="vocab" rows="4" placeholder="Иванов Пётр Сергеевич, ООО «Вектор», дело А40-12345/2026"></textarea>
+      <div class="pop-actions"><button class="btn ghost small" id="vocab-clear">Очистить</button><button class="btn primary small" id="vocab-done">Готово</button></div>
+    </div>
+
+    <div class="drop-veil" id="drop-veil"><div>Отпустите — начнём</div></div>
+  </main>
+
+  <!-- ─────────── Архив ─────────── -->
+  <main class="page" id="page-archive">
+    <div class="page-head">
+      <h1>Архив</h1>
+      <input class="search" id="archive-search" type="search" placeholder="Поиск по имени и тексту" />
+    </div>
+    <div class="archive" id="archive"></div>
+    <div class="empty" id="archive-empty">
+      <div class="empty-mark"><svg viewBox="0 0 48 48"><path d="M8 24h4M16 16v16M22 20v8M28 12v24M34 18v12M40 24h0" /></svg></div>
+      <p>Здесь появятся готовые расшифровки</p>
+    </div>
+  </main>
+
+  <!-- ─────────── Модели ─────────── -->
+  <main class="page" id="page-models">
+    <div class="page-head">
+      <h1>Модели</h1>
+      <p class="lead">Скачиваются один раз и работают без интернета. Хватит одной — той, что выбрана на главной.</p>
+    </div>
+    <div class="models" id="models"></div>
+    <div class="facts" id="facts"></div>
+  </main>
+
+  <!-- ─────────── Параметры ─────────── -->
+  <main class="page" id="page-settings">
+    <div class="page-head"><h1>Параметры</h1></div>
+    <div class="settings">
+      <div class="group-title">Распознавание</div>
+      <div class="row">
+        <div><b>Язык речи</b><span>Если в записи несколько языков — «Определять сам»</span></div>
+        <select id="set-language">
+          <option value="ru">Русский</option>
+          <option value="en">Английский</option>
+          <option value="uk">Украинский</option>
+          <option value="kk">Казахский</option>
+          <option value="be">Белорусский</option>
+          <option value="de">Немецкий</option>
+          <option value="auto">Определять сам</option>
+        </select>
+      </div>
+      <div class="row">
+        <div><b>Потоки процессора</b><span id="threads-hint">По числу физических ядер</span></div>
+        <div class="range"><input type="range" id="set-threads" min="0" max="16" step="1" /><output id="threads-out">авто</output></div>
+      </div>
+      <div class="row" id="row-gpu">
+        <div><b>Видеокарта</b><span id="gpu-hint">Эта сборка считает на процессоре</span></div>
+        <label class="switch"><input type="checkbox" id="set-gpu" /><i></i></label>
+      </div>
+
+      <div class="group-title">Результат</div>
+      <div class="row">
+        <div><b>Куда сохранять</b><span id="outdir-hint">Рядом с записью</span></div>
+        <div class="seg" id="set-outdir">
+          <button data-v="near">Рядом</button><button data-v="pick">Папка…</button>
+        </div>
+      </div>
+      <div class="row">
+        <div><b>Если текст уже есть</b><span>Старый файл с вашими правками не пропадёт</span></div>
+        <div class="seg" id="set-exists">
+          <button data-v="rename">Рядом «(2)»</button><button data-v="overwrite">Заменить</button><button data-v="skip">Пропустить</button>
+        </div>
+      </div>
+      <div class="row">
+        <div><b>Шапка</b><span>Источник, длительность, дата и движок в начале файла</span></div>
+        <label class="switch"><input type="checkbox" id="set-header" /><i></i></label>
+      </div>
+      <div class="row">
+        <div><b>Метки времени</b><span>[00:04:12] перед каждым абзацем</span></div>
+        <label class="switch"><input type="checkbox" id="set-timestamps" /><i></i></label>
+      </div>
+      <div class="row">
+        <div><b>Открывать по готовности</b><span>Текст сам откроется, когда расшифровка закончится</span></div>
+        <label class="switch"><input type="checkbox" id="set-open" /><i></i></label>
+      </div>
+
+      <div class="group-title">Окно</div>
+      <div class="row">
+        <div><b>Тема</b></div>
+        <div class="seg" id="set-theme">
+          <button data-v="auto">Как в Windows</button><button data-v="dark">Тёмная</button><button data-v="light">Светлая</button>
+        </div>
+      </div>
+      <p class="colophon" id="colophon">Стенограф · whisper.cpp · звук не покидает компьютер</p>
+    </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="wave.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+[workspace]
+resolver = "2"
+members = ["crates/core", "crates/cli", "src-tauri"]
+
+[workspace.package]
+version = "2.0.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+stenograf-core = { path = "crates/core" }
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+opt-level = 3
+strip = true
+
+# whisper.cpp без оптимизаций в debug ползёт: даже в dev собираем его с -O3.
+[profile.dev.package."*"]
+opt-level = 3

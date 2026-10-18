@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Стенограф",
+  "mainBinaryName": "stenograf-app",
+  "version": "2.0.0",
+  "identifier": "app.stenograf.desktop",
+  "build": {
+    "frontendDist": "../ui"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "Стенограф",
+        "width": 1100,
+        "height": 720,
+        "minWidth": 860,
+        "minHeight": 580,
+        "center": true,
+        "decorations": false,
+        "shadow": true,
+        "resizable": true,
+        "visible": false,
+        "dragDropEnabled": true,
+        "backgroundColor": "#0a0a0b"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.ico"],
+    "publisher": "Stenograf",
+    "shortDescription": "Расшифровка диктофонных записей без интернета",
+    "longDescription": "Стенограф превращает записи диктофона (WMA, MP3, M4A, WAV…) в текст TXT, DOCX и SRT. Распознавание — whisper.cpp на этом компьютере, звук никуда не отправляется.",
+    "copyright": "MIT",
+    "fileAssociations": [
+      { "ext": ["wma", "m4a", "amr"], "name": "Stenograf.Audio", "description": "Запись диктофона", "role": "None" }
+    ],
+    "windows": {
+      "webviewInstallMode": { "type": "embedBootstrapper" },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": ["Russian", "English"],
+        "displayLanguageSelector": false,
+        "startMenuFolder": "Стенограф"
+      }
+    }
+  }
+}

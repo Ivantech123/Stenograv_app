@@ -3,8 +3,10 @@
 //! 1. Оцениваем скорость каждого режима (× к реальному времени) по ядрам и SIMD.
 //!    Как только на этом ПК прошла хоть одна расшифровка — берём замер, а не оценку.
 //! 2. Отсекаем режимы, которым не хватит свободной памяти или места на диске.
-//! 3. Берём самый точный режим, который успевает: «Точно» — от ×2, «Баланс» — от ×1.
+//! 3. Берём самый точный режим, который успевает: «Баланс» — от ×1, иначе «Быстро».
 //!    Медленнее реального времени часовое заседание считалось бы больше часа.
+//!    «Точно» (полная large-v3) сам не выбираем: на тестовой диктовке она ошиблась
+//!    там, где turbo был прав («по ставке» вместо «поставки»), — только вручную.
 //! 4. На батарее с зарядом меньше половины — на ступень легче.
 
 use std::collections::HashMap;
@@ -52,7 +54,7 @@ fn ram_need(preset: Preset) -> u64 {
 
 fn min_speed(preset: Preset) -> f64 {
     match preset {
-        Preset::Accurate => 2.0,
+        Preset::Accurate => f64::INFINITY,
         Preset::Balanced => 1.0,
         Preset::Fast => 0.0,
     }
@@ -382,14 +384,14 @@ mod tests {
     }
 
     #[test]
-    fn gpu_prefers_accurate() {
+    fn gpu_is_used_but_accurate_stays_manual() {
         let mut hw = machine(6, 0, 16);
         hw.gpu_build = true;
         hw.gpus = vec![Gpu { name: "RTX".into(), vram: 8 << 30, integrated: false }];
         let a = advise(&hw, true, 0);
         assert!(a.gpu);
-        assert_eq!(a.preset, Preset::Accurate);
-        assert_eq!(advise(&hw, false, 0).preset, Preset::Balanced);
+        assert_eq!(a.preset, Preset::Balanced);
+        assert!(a.estimate(Preset::Accurate).unwrap().speed > 2.0);
     }
 
     #[test]
